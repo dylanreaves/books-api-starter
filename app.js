@@ -2,12 +2,14 @@ const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const { Sequelize } = require('sequelize')
+const { Op } = require("sequelize");
 
 // TODO: Workshop Part 1: import your db connection from ./db once it's wired up.
 const db = require('./db')
 
 //db.authenticate().then(() => console.log("DB connected")).catch(console.error)
-const books = require('./models/book')
+const books = require('./models/book');
+const Book = require("./models/book");
 
 const app = express();
 const PORT = 8080;
@@ -43,17 +45,39 @@ app.get("/", (request, response) => {
 app.get("/api/books", async (request, response, next) => {
   try {
     console.log(request.query)
-    if (request.query) {
+    console.log(request.query.search)
+
+    if (Object.keys(request.query).length > 0) {
+      const queryToBeFixed = Object.assign({},request.query) // Create a copy of the query that we can edit
+      const describe = await books.describe()
+
+      // Removes all fields in query that can't be used in the database
+      for (const [key, value] of Object.entries(queryToBeFixed)) {
+        if (!Object.hasOwn(describe, key)) {
+          delete queryToBeFixed[key]
+        } else {
+          console.log(key, "was found in both!")
+        }
+      }
+
+      const where = {...queryToBeFixed}
+
+      if (typeof request.query.search === "string") {
+        where.title = {
+          [Op.iLike]: request.query.search+'%',
+        };
+      }
+
+      console.log(where);
+
       const allBooks = await books.findAll({
-        where: {
-          genre: request.query.genre,
-        },
+        where,
       });
-       response.json(allBooks);
+      return response.json(allBooks);
     }
 
     const allBooks = await books.findAll();
-    response.json(allBooks);
+    return response.json(allBooks);
   } catch (error) {
     next(error);
   }
@@ -71,7 +95,7 @@ app.get("/api/books/:id", async (request, response, next) => {
       return response.sendStatus(404);
     }
 
-    response.json(foundBook);
+    return response.json(foundBook);
   } catch (error) {
     next(error);
   }
@@ -89,7 +113,7 @@ app.post("/api/books", async (request, response, next) => {
       genre: genre,
     })
 
-    response.status(201).json(newBook);
+    return response.status(201).json(newBook);
   } catch (error) {
     next(error);
   }
@@ -109,7 +133,7 @@ app.patch("/api/books/:id", async (request, response, next) => {
 
     foundBook.update(request.body)
 
-    response.status(200).json(foundBook);
+    return response.status(200).json(foundBook);
   } catch (error) {
     next(error);
   }
@@ -129,7 +153,7 @@ app.delete("/api/books/:id", async (request, response, next) => {
 
     foundBook.destroy()
 
-    response.sendStatus(204); // 204 No Content — no body on a successful delete
+    return response.sendStatus(204); // 204 No Content — no body on a successful delete
   } catch (error) {
     next(error);
   }
@@ -143,7 +167,7 @@ app.delete("/api/books/:id", async (request, response, next) => {
 // 4 parameters (error first) is how Express recognizes this as an error handler.
 app.use((error, request, response, next) => {
   console.error(error);
-  response.sendStatus(500);
+  return response.sendStatus(500);
 });
 
 // app server ------------------------------------------
