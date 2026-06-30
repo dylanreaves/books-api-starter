@@ -60,7 +60,7 @@ app.get("/api/books", async (request, response, next) => {
         if (!Object.hasOwn(describe, key)) {
           delete queryToBeFixed[key]
         } else {
-          console.log(key, "was found in both!")
+          //console.log(key, "was found in both!")
         }
       }
 
@@ -105,6 +105,63 @@ app.get("/api/books/:id", async (request, response, next) => {
   }
 });
 
+app.get("/api/books/:id/reviews", async (request, response, next) => {
+  try {
+    const id = Number(request.params.id); // request.params.id is always a string — Number() makes it comparable
+
+    // There are actually two methods of doing this from my understanding.
+    // We can find all reviews that match the Id.
+    const foundReviews = await Review.findAll({
+      where: {bookId: id}
+    })
+
+    // Or we can find the book by its specific Id and just return its reviews field.
+    // const foundBook = await Book.findByPk(id, {
+    //   include: Review
+    // })
+    // return response.json(foundBook.reviews)
+
+    if (!foundReviews) {
+      return response.sendStatus(404);
+    }
+
+    return response.json(foundReviews);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/reviews/:id", async (request, response, next) => {
+  try {
+    const id = Number(request.params.id); // request.params.id is always a string — Number() makes it comparable
+    const foundReview = await Review.findByPk(id)
+    
+    if (!foundReview) {
+      return response.sendStatus(404);
+    }
+
+    return response.json(foundReview); // 204 No Content — no body on a successful delete
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Extra route that returns ALL reviews
+app.get("/api/reviews", async (request, response, next) => {
+  try {
+    const id = Number(request.params.id); // request.params.id is always a string — Number() makes it comparable
+    const foundReviews = await Review.findAll()
+
+    if (!foundReviews) {
+      return response.sendStatus(404);
+    }
+
+    return response.json(foundReviews);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Part 5: POST a new book
 // TODO: Workshop: swap the manual id/push for the Book method that creates a row
 // directly from req.body. nextId goes away — the database assigns the id now.
@@ -123,7 +180,19 @@ app.post("/api/books", async (request, response, next) => {
   }
 });
 
-app.post("/api/books/:id/reviews", async (request, response, next) => {
+function validateReview(request, response, next) {
+  const reviewer = request.body.reviewer
+  const rating = Number(request.body.rating)
+  const comment = request.body.comment
+
+  if (reviewer && rating && comment && (rating > 0 && rating < 6)) {
+    next()
+  } else {
+    return response.status(400).send("Invalid format for review")
+  }
+}
+
+app.post("/api/books/:id/reviews", validateReview, async (request, response, next) => {
   try {
     const id = Number(request.params.id)
     const { reviewer, rating, comment } = request.body;
@@ -165,7 +234,7 @@ app.patch("/api/books/:id", async (request, response, next) => {
 // method that removes itself — no more findIndex/splice.
 app.delete("/api/books/:id", async (request, response, next) => {
   try {
-    const id = Number(request.params.id);
+    const id = Number(request.params.id)
     const foundBook = await Book.findByPk(id)
 
     if (!foundBook) {
@@ -173,7 +242,22 @@ app.delete("/api/books/:id", async (request, response, next) => {
     }
 
     foundBook.destroy()
+    return response.sendStatus(204); // 204 No Content — no body on a successful delete
+  } catch (error) {
+    next(error);
+  }
+});
 
+app.delete("/api/reviews/:id", async (request, response, next) => {
+  try {
+    const id = Number(request.params.id); // request.params.id is always a string — Number() makes it comparable
+    const foundReview = await Review.findByPk(id)
+    
+    if (!foundReview) {
+      return response.sendStatus(404);
+    }
+
+    foundReview.destroy()
     return response.sendStatus(204); // 204 No Content — no body on a successful delete
   } catch (error) {
     next(error);
