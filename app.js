@@ -8,7 +8,15 @@ const { Op } = require("sequelize");
 const db = require('./db')
 
 //db.authenticate().then(() => console.log("DB connected")).catch(console.error)
-const Book = require("./models/book");
+// const Book = require("./models/book")
+// const Review = require("./models/review")
+
+// WILL FIX LATER
+const Book = require("./models").Book;
+const Review = require("./models").Review
+
+// const Book = require("./models/book")
+// const Review = require("./models/review")
 
 const app = express();
 const PORT = 8080;
@@ -83,7 +91,9 @@ app.get("/api/books", async (request, response, next) => {
 app.get("/api/books/:id", async (request, response, next) => {
   try {
     const id = Number(request.params.id); // request.params.id is always a string — Number() makes it comparable
-    const foundBook = await Book.findByPk(id)
+    const foundBook = await Book.findByPk(id, {
+      include: Review
+    })
 
     if (!foundBook) {
       return response.sendStatus(404);
@@ -112,6 +122,23 @@ app.post("/api/books", async (request, response, next) => {
     next(error);
   }
 });
+
+app.post("/api/books/:id/reviews", async (request, response, next) => {
+  try {
+    const id = Number(request.params.id)
+    const { reviewer, rating, comment } = request.body;
+    const newReview = await Review.create({
+      reviewer: reviewer,
+      rating: rating,
+      comment: comment,
+      bookId: id,
+    })
+
+    return response.status(201).json(newReview);
+  } catch(error) {
+    next(error);
+  }
+})
 
 // Part 6: PATCH an existing book — only changes the fields that were sent
 // TODO: Workshop: find the book the same Sequelize way as the GET-one route above,
