@@ -25,6 +25,7 @@ const Book = dbConnection.define('book', {
     },
     publishedYear: {
         type: DataTypes.INTEGER,
+        defaultValue: true,
     },
 })
 
