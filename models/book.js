@@ -22,10 +22,10 @@ const Book = dbConnection.define('book', {
     },
     available: {
         type: DataTypes.BOOLEAN,
+        defaultValue: true,
     },
     publishedYear: {
         type: DataTypes.INTEGER,
-        defaultValue: true,
     },
 })
 
