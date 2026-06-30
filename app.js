@@ -8,7 +8,6 @@ const { Op } = require("sequelize");
 const db = require('./db')
 
 //db.authenticate().then(() => console.log("DB connected")).catch(console.error)
-const books = require('./models/book');
 const Book = require("./models/book");
 
 const app = express();
@@ -44,12 +43,9 @@ app.get("/", (request, response) => {
 // TODO: Workshop: swap `books` for the Book method that returns every row.
 app.get("/api/books", async (request, response, next) => {
   try {
-    console.log(request.query)
-    console.log(request.query.search)
-
     if (Object.keys(request.query).length > 0) {
       const queryToBeFixed = Object.assign({},request.query) // Create a copy of the query that we can edit
-      const describe = await books.describe()
+      const describe = await Book.describe()
 
       // Removes all fields in query that can't be used in the database
       for (const [key, value] of Object.entries(queryToBeFixed)) {
@@ -68,15 +64,13 @@ app.get("/api/books", async (request, response, next) => {
         };
       }
 
-      console.log(where);
-
-      const allBooks = await books.findAll({
+      const allBooks = await Book.findAll({
         where,
       });
       return response.json(allBooks);
     }
 
-    const allBooks = await books.findAll();
+    const allBooks = await Book.findAll();
     return response.json(allBooks);
   } catch (error) {
     next(error);
@@ -89,7 +83,7 @@ app.get("/api/books", async (request, response, next) => {
 app.get("/api/books/:id", async (request, response, next) => {
   try {
     const id = Number(request.params.id); // request.params.id is always a string — Number() makes it comparable
-    const foundBook = await books.findByPk(id)
+    const foundBook = await Book.findByPk(id)
 
     if (!foundBook) {
       return response.sendStatus(404);
@@ -107,7 +101,7 @@ app.get("/api/books/:id", async (request, response, next) => {
 app.post("/api/books", async (request, response, next) => {
   try {
     const { title, author, genre } = request.body;
-    const newBook = await books.create({
+    const newBook = await Book.create({
       title: title,
       author: author,
       genre: genre,
@@ -125,7 +119,7 @@ app.post("/api/books", async (request, response, next) => {
 app.patch("/api/books/:id", async (request, response, next) => {
   try {
     const id = Number(request.params.id);
-    const foundBook = await books.findByPk(id)
+    const foundBook = await Book.findByPk(id)
 
     if (!foundBook) {
       return response.sendStatus(404);
@@ -145,7 +139,7 @@ app.patch("/api/books/:id", async (request, response, next) => {
 app.delete("/api/books/:id", async (request, response, next) => {
   try {
     const id = Number(request.params.id);
-    const foundBook = await books.findByPk(id)
+    const foundBook = await Book.findByPk(id)
 
     if (!foundBook) {
       return response.sendStatus(404);
