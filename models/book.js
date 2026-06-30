@@ -15,17 +15,17 @@ const Book = dbConnection.define('book', {
     },
     author: {
         type: DataTypes.STRING,
+        allowNull: false,
     },
     genre: {
         type: DataTypes.STRING,
-        allowNull: false,
+    },
+    publishedYear: {
+        type: DataTypes.INTEGER,
     },
     available: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
-    },
-    publishedYear: {
-        type: DataTypes.INTEGER,
     },
 })
 
