@@ -1,7 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
-const { Sequelize } = require('sequelize')
+const { Sequelize, Model } = require('sequelize')
 const { Op } = require("sequelize");
 
 // TODO: Workshop Part 1: import your db connection from ./db once it's wired up.
@@ -12,8 +12,12 @@ const db = require('./db')
 // const Review = require("./models/review")
 
 // WILL FIX LATER
-const Book = require("./models").Book;
-const Review = require("./models").Review
+// const Book = require("./models").Book;
+// const Review = require("./models").Review
+
+const Models = require("./models")
+const Book = Models.Book
+const Review = Models.Review
 
 // const Book = require("./models/book")
 // const Review = require("./models/review")
@@ -55,14 +59,11 @@ app.get("/api/books", async (request, response, next) => {
       const queryToBeFixed = Object.assign({},request.query) // Create a copy of the query that we can edit
       const describe = await Book.describe()
 
-      // Removes all fields in query that can't be used in the database
+      // Removes all fields in query that can't be used in the database to avoid search errors
       for (const [key, value] of Object.entries(queryToBeFixed)) {
         if (!Object.hasOwn(describe, key)) {
           delete queryToBeFixed[key]
         } 
-        // else {
-        //   console.log(key, "was found in both!")
-        // }
       }
 
       const where = {...queryToBeFixed}
