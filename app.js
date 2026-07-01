@@ -59,9 +59,10 @@ app.get("/api/books", async (request, response, next) => {
       for (const [key, value] of Object.entries(queryToBeFixed)) {
         if (!Object.hasOwn(describe, key)) {
           delete queryToBeFixed[key]
-        } else {
-          //console.log(key, "was found in both!")
-        }
+        } 
+        // else {
+        //   console.log(key, "was found in both!")
+        // }
       }
 
       const where = {...queryToBeFixed}
@@ -108,7 +109,7 @@ app.get("/api/books/:id", async (request, response, next) => {
 app.get("/api/books/:id/reviews", async (request, response, next) => {
   try {
     const id = Number(request.params.id); // request.params.id is always a string — Number() makes it comparable
-
+    
     // There are actually two methods of doing this from my understanding.
     // We can find all reviews that match the Id.
     const foundReviews = await Review.findAll({
@@ -120,6 +121,11 @@ app.get("/api/books/:id/reviews", async (request, response, next) => {
     //   include: Review
     // })
     // return response.json(foundBook.reviews)
+
+    // It might be a good idea to see which table has more rows and use that to decide
+    // which one might be more optimized. We can use .count() to get the size of the tables.
+    // console.log(await Book.count())
+    // console.log(await Review.count())
 
     if (!foundReviews) {
       return response.sendStatus(404);
@@ -185,7 +191,7 @@ function validateReview(request, response, next) {
   const rating = Number(request.body.rating)
   const comment = request.body.comment
 
-  if (reviewer && rating && comment && (rating > 0 && rating < 6)) {
+  if (rating && (rating > 0 && rating < 6)) {
     next()
   } else {
     return response.status(400).send("Invalid format for review")
