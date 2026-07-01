@@ -241,7 +241,7 @@ app.delete("/api/books/:id", async (request, response, next) => {
       return response.sendStatus(404);
     }
 
-    foundBook.destroy()
+    await foundBook.destroy()
     return response.sendStatus(204); // 204 No Content — no body on a successful delete
   } catch (error) {
     next(error);
@@ -257,7 +257,7 @@ app.delete("/api/reviews/:id", async (request, response, next) => {
       return response.sendStatus(404);
     }
 
-    foundReview.destroy()
+    await foundReview.destroy()
     return response.sendStatus(204); // 204 No Content — no body on a successful delete
   } catch (error) {
     next(error);
